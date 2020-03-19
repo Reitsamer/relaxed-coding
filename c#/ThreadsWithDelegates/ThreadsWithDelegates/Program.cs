@@ -11,6 +11,8 @@ namespace ThreadsWithDelegates
     {
         public delegate int BinaryOp(int x, int y);
 
+        private static bool isDone = false;
+
         private static int Add(int a, int b)
         {
             Console.WriteLine($"Add() executed on thread #{Thread.CurrentThread.ManagedThreadId}");
@@ -28,20 +30,39 @@ namespace ThreadsWithDelegates
             //int result = op.Invoke(10, 10);
 
             // Thread thread = new Thread(Add);
-            IAsyncResult asyncResult = op.BeginInvoke(10, 10, null, null);
+            IAsyncResult asyncResult = op.BeginInvoke(10, 10, DelegateFinished, null);
 
-            for (int i = 1; i <= 10; i++)
+            //while (!asyncResult.IsCompleted)
+            //{
+            //    Console.Write(".");
+            //    Thread.Sleep(200);
+            //}
+            //Console.WriteLine();
+
+            //while (!asyncResult.AsyncWaitHandle.WaitOne(20000, true))
+            //{
+            //    Console.Write(".");
+            //}
+            //Console.WriteLine();
+
+            while (!isDone)
             {
-                Thread.Sleep(500);
-                Console.Write(i + " ");
+                Console.Write(".");
+                Thread.Sleep(200);
             }
             Console.WriteLine();
 
             // thread.Join();
-            // int result = op.EndInvoke(asyncResult);
-            // Console.WriteLine($"The result of 10 + 10 is: {result} (thread #{Thread.CurrentThread.ManagedThreadId})");
+            int result = op.EndInvoke(asyncResult);
+            Console.WriteLine($"The result of 10 + 10 is: {result} (thread #{Thread.CurrentThread.ManagedThreadId})");
 
             Console.ReadLine();
+        }
+
+        private static void DelegateFinished(IAsyncResult ar)
+        {
+            Console.WriteLine($"Binary Operation Finished: thread #{Thread.CurrentThread.ManagedThreadId}");
+            isDone = true;
         }
     }
 }
