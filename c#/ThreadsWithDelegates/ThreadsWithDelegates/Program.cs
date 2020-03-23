@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,8 @@ namespace ThreadsWithDelegates
         public delegate int BinaryOp(int x, int y);
 
         private static bool isDone = false;
+
+        //private static BinaryOp op;
 
         private static int Add(int a, int b)
         {
@@ -30,7 +33,7 @@ namespace ThreadsWithDelegates
             //int result = op.Invoke(10, 10);
 
             // Thread thread = new Thread(Add);
-            IAsyncResult asyncResult = op.BeginInvoke(10, 10, DelegateFinished, null);
+            IAsyncResult asyncResult = op.BeginInvoke(10, 10, DelegateFinished, "Kind regards from Main()");
 
             //while (!asyncResult.IsCompleted)
             //{
@@ -53,15 +56,23 @@ namespace ThreadsWithDelegates
             Console.WriteLine();
 
             // thread.Join();
-            int result = op.EndInvoke(asyncResult);
-            Console.WriteLine($"The result of 10 + 10 is: {result} (thread #{Thread.CurrentThread.ManagedThreadId})");
+            // int result = op.EndInvoke(asyncResult);
+            // Console.WriteLine($"The result of 10 + 10 is: {result} (thread #{Thread.CurrentThread.ManagedThreadId})");
 
             Console.ReadLine();
         }
 
         private static void DelegateFinished(IAsyncResult ar)
         {
+            AsyncResult asyncResult = ar as AsyncResult;
+            BinaryOp op = asyncResult.AsyncDelegate as BinaryOp;
+
+            string message = ar.AsyncState as string;
+
             Console.WriteLine($"Binary Operation Finished: thread #{Thread.CurrentThread.ManagedThreadId}");
+            int result = op.EndInvoke(ar);
+
+            Console.WriteLine($"{message}: " + result);
             isDone = true;
         }
     }
